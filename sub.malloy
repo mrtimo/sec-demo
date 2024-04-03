@@ -1,0 +1,276 @@
+/*
+source: sic1 is duckdb.table('./divisions.parquet') extend {
+    dimension: division is `Division`:::number
+    primary_key: division
+}
+source: sic4 is duckdb.table('./sic-codes.parquet') extend {
+    dimension: sic is SIC:::number
+    primary_key: sic
+}
+source: sic3 is duckdb.table('./industry-groups.parquet') extend {
+    dimension: industry_group is `Industry Group`:::NUMBER
+    primary_key: industry_group
+}
+source: sic2 is duckdb.table('./major-groups.parquet') extend {
+    primary_key: Division
+}
+*/
+
+source: sub is duckdb.table('./sub2022*.parquet') extend {
+    dimension: major_code is trunc(sic / 100)
+    dimension: industry_code is trunc(sic / 10)
+    dimension: division is trunc(sic / 1000)
+    --join_one: sic4 with sic
+    
+}
+
+run: sub -> {
+    aggregate: num_lines is count(adsh)
+}
+
+run: sub -> {
+    group_by: form
+    aggregate: num_forms is count(adsh)
+    limit: 10
+}
+
+# bar_chart
+run: sub -> {
+    group_by: form
+    aggregate: num_forms is count(adsh)
+    limit: 10
+}
+
+# bar_chart
+run: sub -> {
+    group_by: month_accepted is accepted.week
+    aggregate: num_filers is count(cik)
+    where: form = "8-K"
+}
+
+# bar_chart
+run: sub -> {
+    group_by: month_accepted is accepted.week
+    aggregate: num_filers is count(cik)
+    where: form = "10-Q"
+}
+
+# bar_chart
+run: sub -> {
+    group_by: week_accepted is accepted.week
+    aggregate: num_filers is count(cik)
+    where: form = "10-K"
+}
+
+
+# bar_chart
+run: sub -> {
+    group_by: week_accepted is accepted.day
+    aggregate: num_filers is count(cik)
+    where: form = "10-K" and month(accepted) = 3
+}
+
+# bar_chart
+run: sub -> {
+    group_by: week_accepted is accepted.hour
+    aggregate: num_filers is count(cik)
+    where: form = "10-K" and month(accepted) = 3 and day(accepted) = 31
+}
+
+# bar_chart
+run: sub -> {
+    group_by: week_accepted is accepted.hour
+    aggregate: num_filers is count(cik)
+    where: form = "10-K" and month(accepted) = 3 and day(accepted) = 31
+}
+
+
+
+# bar_chart
+run: sub -> {
+    group_by: week_accepted is accepted.minute
+    aggregate: num_filers is count(cik)
+    where: form = "10-K" and month(accepted) = 3 and day(accepted) = 31 and hour(accepted) = 16
+}
+
+# bar_chart
+run: sub -> {
+    group_by: min_accepted is accepted.minute
+    aggregate: num_filers is count(cik)
+    where: form = "10-K" and hour(accepted) = 16 and accepted.day ? @2022-03-31
+}
+
+
+# bar_chart
+run: sub -> {
+    group_by: month_accepted is accepted.minute
+    aggregate: num_filers is count(cik)
+    where: form = "10-K" and hour(accepted) = 16 and accepted.day ? @2022-03-31
+}
+
+
+# bar_chart
+run: sub -> {
+    group_by: month_accepted is accepted.minute
+    aggregate: num_filers is count(cik)
+    where: form = "10-K" and hour(accepted) = 16 and accepted.day ? @2022-03-31
+}
+
+# shape_map
+run: sub -> {
+    group_by: stprba
+    aggregate: num_incs is count(cik)
+    where: form = "10-K" and major_code = 10
+}
+
+# bar_chart
+run: sub -> {
+group_by: form
+aggregate: no_filings is count(adsh)
+limit: 10
+}
+
+# bar_chart
+run: sub -> {
+    group_by: accepted_month is accepted.week
+    aggregate: no_filings is count(adsh)
+    where: form = "10-K" and accepted ? @2022-03 
+   
+}
+
+run: sub -> {
+    aggregate: submissions is count()
+    limit:10
+}
+
+# shape_map
+run: sub -> {
+    group_by: zipba
+    aggregate: submissions is count()
+    where: form = "10-K"
+}
+
+
+-- Companies submitting 10-Q's by month
+# bar_chart
+run: sub -> {
+  group_by:
+    accepted_month is accepted.month
+  aggregate: no_filings is count(adsh)
+  where: form = "10-Q"
+}
+
+run: sub -> {
+    select: major_code
+}
+
+run: sub -> {
+    group_by: major_code
+    aggregate: no_filings is count(adsh)
+    where: form = "10-Q"
+}
+
+run: sub -> {
+  group_by: 
+    e1 is trunc(1.49)
+    e2 is trunc(1.51)
+    e3 is trunc(1.5)
+    e4 is trunc(-1.5)
+    e5 is trunc(1.5, 0)
+    e6 is trunc(1.551, 1)
+    e7 is trunc(1234 / 10)
+    e8 is trunc(1.4, null)
+    e9 is trunc(null, 1)
+}
+
+-- Companies submitting 10-Q's by month
+# bar_chart
+run: sub -> {
+  group_by:
+
+    accepted_month is accepted.month
+  aggregate: no_filings is count(adsh)
+  where: form = "10-Q"
+}
+
+-- Companies submitting 10-Q's by week
+# bar_chart
+run: sub -> {
+  group_by:
+
+    accepted_week is accepted.week
+  aggregate: no_filings is count(adsh)
+  where: form = "10-Q"
+}
+
+-- Companies submitting 10-Q's by week, by month
+# bar_chart
+run: sub -> {
+  group_by:
+    accepted_week is accepted.week
+  aggregate: no_filings is count(adsh)
+  where: form = "10-Q" and accepted ? @2022-11
+}
+
+run: sub -> {
+    group_by: countryinc
+    where: countryinc != "US"
+    aggregate: num_companies is count(cik)
+}
+
+run: sub -> {
+    group_by: countryinc
+    where: countryinc != "US"
+    aggregate: num_companies is count(cik)
+}
+
+run: sub -> {
+    group_by: countryinc
+    where: countryinc != "US"
+    aggregate: num_companies is count(cik)
+    nest: by_cos is {
+        group_by: name
+        where: afs = "1-LAF"
+    }
+}
+
+
+run: sub -> {
+    group_by: stprba
+    where: countryinc = "US"
+    # bar_chart
+    nest: by_city is {
+        
+        group_by: cityba
+        aggregate: num_cos is count(cik)
+        limit: 7
+   
+    }
+    limit: 10
+}
+
+run: sub -> {
+    group_by: stprba
+    where: countryinc = "US" and stprba = "WA"
+    nest: by_city is {
+        group_by: cityba
+        --where: afs = "1-LAF"
+        aggregate: num_cos is count(cik)
+        limit: 10
+    }
+}
+
+run: sub -> {
+    group_by: stprba
+    where: countryinc = "US" and stprba = "WA"
+    nest: by_city is {
+        group_by: cityba
+        --where: afs = "1-LAF"
+        aggregate: num_cos is count(cik)
+        limit: 10
+        nest: by_co is {
+            group_by: name
+            limit: 6
+        }
+    }
+}
